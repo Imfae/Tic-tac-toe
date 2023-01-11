@@ -1,3 +1,4 @@
+## Class for the game Tic-tac-toe
 class NewGame
   @@win_condition = [[1, 2, 3], [1, 5, 9], [1, 4, 7], [3, 6, 9], [7, 8, 9], [4, 5, 6], [2, 5, 8], [3, 5, 7]]
   @@original_board = "1 |2 |3 \n--|--|--\n4 |5 |6 \n--|--|--\n7 |8 |9\n"
@@ -11,8 +12,10 @@ class NewGame
     @selected_blocks = []
   end
 
+  # Control the player-visible level of the game 
   def gameplay
     puts @@original_board
+
     until win? || draw?
       @total_inputs.each_key do |key|
         prompt_input(key)
@@ -52,6 +55,7 @@ class NewGame
     @new_board = @@original_board.gsub(/\d/, ' ')
   end
 
+  # Stores all players' inputs
   def input_storage(player, input)
     @total_inputs[player].push(input)
     @selected_blocks.push(input)
