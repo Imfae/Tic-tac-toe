@@ -1,20 +1,20 @@
+WIN_CONDITION = [[1, 2, 3], [1, 5, 9], [1, 4, 7], [3, 6, 9], [7, 8, 9], [4, 5, 6], [2, 5, 8], [3, 5, 7]].freeze
+
 ## Class for the game Tic-tac-toe
 class NewGame
-  @@win_condition = [[1, 2, 3], [1, 5, 9], [1, 4, 7], [3, 6, 9], [7, 8, 9], [4, 5, 6], [2, 5, 8], [3, 5, 7]]
-  @@original_board = "1 |2 |3 \n--|--|--\n4 |5 |6 \n--|--|--\n7 |8 |9\n"
-
   def initialize
     @total_inputs = {
       'Cross' => [],
       'Nought' => []
     }
+    @original_board = "1 |2 |3 \n--|--|--\n4 |5 |6 \n--|--|--\n7 |8 |9\n"
     @new_board = ''
     @selected_blocks = []
   end
 
-  # Control the player-visible level of the game 
+  # Control the player-visible level of the game
   def gameplay
-    puts @@original_board
+    puts @original_board
 
     until win? || draw?
       @total_inputs.each_key do |key|
@@ -48,11 +48,11 @@ class NewGame
 
   def game_board(player, input)
     if player == 'Cross'
-      @@original_board.gsub!(input.to_s, 'X')
+      @original_board.gsub!(input.to_s, 'X')
     else
-      @@original_board.gsub!(input.to_s, 'O')
+      @original_board.gsub!(input.to_s, 'O')
     end
-    @new_board = @@original_board.gsub(/\d/, ' ')
+    @new_board = @original_board.gsub(/\d/, ' ')
   end
 
   # Stores all players' inputs
@@ -71,7 +71,7 @@ class NewGame
 
   def win?
     @total_inputs.any? do |_key, value|
-      @@win_condition.any? do |item|
+      WIN_CONDITION.any? do |item|
         item.all? do |i|
           value.include?(i)
         end
@@ -84,5 +84,21 @@ class NewGame
   end
 end
 
-game = NewGame.new
-game.gameplay
+def play_again?
+  play_again = gets.chomp.downcase
+  if play_again.include?('y')
+    true
+  elsif play_again.include?('n')
+    false
+  else
+    puts "\nPlease enter 'y' or 'n'."
+    play_again?
+  end
+end
+
+loop do
+  game = NewGame.new
+  game.gameplay
+  puts "\nWould you like to play again? (y/n)"
+  play_again? ? redo : break
+end
