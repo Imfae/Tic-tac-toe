@@ -10,3 +10,5 @@ The squares are marked as follows:
             4 |5 |6
             --|--|--
             7 |8 |9
+
+Play the game live herer: [Replit](https://replit.com/@Conjurer/Tic-tac-toe#main.rb).
