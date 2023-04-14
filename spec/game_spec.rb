@@ -3,34 +3,35 @@ require_relative '../lib/game'
 describe NewGame do
 
   subject(:game) { described_class.new }
+  let(:player_state) { game.instance_variable_get(:@total_inputs) }
 
   describe '#win?' do
 
     context 'when blocks occupied by a symbol include three blocks in a row' do
       it 'returns true' do
         game.instance_variable_set(:@total_inputs, {'Cross' => [4, 2, 6, 5]})
-        expect(game).to be_win
+        expect(game.win?(player_state, 'Cross')).to be true
       end
     end
 
     context 'when blocks occupied by a symbol include three blocks in a column' do
       it 'returns true' do
         game.instance_variable_set(:@total_inputs, {'Cross' => [4, 1, 6, 2, 7]})
-        expect(game).to be_win
+        expect(game.win?(player_state, 'Cross')).to be true
       end
     end
 
     context 'when blocks occupied by a symbol include three blocks in a diagonal' do
       it 'returns true' do
         game.instance_variable_set(:@total_inputs, {'Nought' => [1, 5, 3, 7]})
-        expect(game).to be_win
+        expect(game.win?(player_state, 'Nought')).to be true
       end
     end
 
     context 'when blocks occupied by a symbol do not form a line of three blocks' do
       it 'returns false' do
         game.instance_variable_set(:@total_inputs, {'Nought' => [1, 5, 3, 8]})
-        expect(game).not_to be_win
+        expect(game.win?(player_state, 'Nought')).to be false
       end
     end
   end
@@ -41,11 +42,14 @@ describe NewGame do
 
       before do
         allow(game).to receive(:puts)
+        allow(game).to receive(:prompt_input)
         allow(game).to receive(:win?).and_return(true)
       end
 
-      it 'returns nil' do
-        expect(game.gameplay).to be_nil
+      it 'returns #game_end_message' do
+        expect(game).to receive(:game_end_message)
+
+        game.gameplay
       end
     end
 
@@ -53,11 +57,30 @@ describe NewGame do
 
       before do
         allow(game).to receive(:puts)
+        allow(game).to receive(:prompt_input)
         allow(game).to receive(:draw?).and_return(true)
       end
 
-      it 'returns nil' do
-        expect(game.gameplay).to be_nil
+      it 'returns #game_end_message' do
+        allow(game).to receive(:game_end_message)
+
+        game.gameplay
+      end
+    end
+
+    context 'when not #win? or #draw?, then #draw?' do
+
+      before do
+        allow(game).to receive(:puts)
+        allow(game).to receive(:prompt_input)
+        allow(game).to receive(:win?).and_return(false)
+        allow(game).to receive(:draw?).and_return(false, true)
+      end
+
+      it 'returns #game_end_message' do
+        allow(game).to receive(:game_end_message)
+
+        game.gameplay
       end
     end
   end
@@ -171,11 +194,13 @@ describe NewGame do
 
   describe '#draw?' do
 
+    let(:game_state) { game.instance_variable_get(:@selected_blocks) }
+
     context 'when game is draw (no more moves can be made on board)' do
 
       it 'returns true' do
         game.instance_variable_set(:@selected_blocks, [2, 3, 6, 4, 9, 7, 8, 1, 5])
-        expect(game).to be_draw
+        expect(game.draw?(game_state)).to be true
       end
     end
 
@@ -183,7 +208,80 @@ describe NewGame do
       
       it 'returns false' do
         game.instance_variable_set(:@selected_blocks, [2, 3, 6, 7, 8, 1, 5])
-        expect(game).not_to be_draw
+        expect(game.draw?(game_state)).to be false
+      end
+    end
+  end
+
+  describe '#minimax' do
+    
+    context 'when Cross is winning' do
+
+      context 'when Cross win by choosing 8 as next move' do
+
+        before do
+          new_inputs = {'Cross' => [1, 2, 5], 'Nought' => [3, 4, 9]}
+          new_selected = [1, 2, 3, 4, 5, 9]
+          game.instance_variable_set(:@total_inputs, new_inputs)
+          game.instance_variable_set(:@selected_blocks, new_selected)
+        end
+
+        it 'returns array [1, 8]' do
+          total_inputs = game.instance_variable_get(:@total_inputs)
+          selected_blocks = game.instance_variable_get(:@selected_blocks)
+          expect(game.minimax(total_inputs, selected_blocks, true)).to be == [1, 8]
+        end
+      end
+
+      context 'when Cross will win if 5 is chosen as next move' do
+
+        before do
+          new_inputs = {'Cross' => [1, 2], 'Nought' => [3, 4]}
+          new_selected = [1, 2, 3, 4]
+          game.instance_variable_set(:@total_inputs, new_inputs)
+          game.instance_variable_set(:@selected_blocks, new_selected)
+        end
+
+        it 'returns array [1, 5]' do
+          total_inputs = game.instance_variable_get(:@total_inputs)
+          selected_blocks = game.instance_variable_get(:@selected_blocks)
+          expect(game.minimax(total_inputs, selected_blocks, true)).to be == [1, 5]
+        end
+      end
+    end
+
+    context 'when Nought is winning' do
+
+      context 'when Nought will win no matter what' do
+
+        before do
+          new_inputs = {'Cross' => [7, 8], 'Nought' => [2, 6, 9]}
+          new_selected = [2, 6, 7, 8, 9]
+          game.instance_variable_set(:@total_inputs, new_inputs)
+          game.instance_variable_set(:@selected_blocks, new_selected)
+        end
+
+        it 'returns array [-1, 1]' do
+          total_inputs = game.instance_variable_get(:@total_inputs)
+          selected_blocks = game.instance_variable_get(:@selected_blocks)
+          expect(game.minimax(total_inputs, selected_blocks, true)).to be == [-1, 1]
+        end
+      end
+    end
+
+    context 'when the game is going to draw' do
+
+      before do
+        new_inputs = {'Cross' => [1, 5, 8], 'Nought' => [2, 6, 7, 9]}
+        new_selected = [1, 2, 5, 6, 7, 8, 9]
+        game.instance_variable_set(:@total_inputs, new_inputs)
+        game.instance_variable_set(:@selected_blocks, new_selected)
+      end
+
+      it 'returns array [0, 3]' do
+        total_inputs = game.instance_variable_get(:@total_inputs)
+        selected_blocks = game.instance_variable_get(:@selected_blocks)
+        expect(game.minimax(total_inputs, selected_blocks, true)).to be == [0, 3]
       end
     end
   end
