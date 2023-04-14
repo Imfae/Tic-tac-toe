@@ -1,6 +1,10 @@
 Metrics/BlockLength:
+  Include:
+    - 'lib/*'
   Exclude:
     - 'spec/*'
+Metrics/ClassLength:
+  Max: 200
 Layout/LineLength:
   Exclude:
     - 'spec/*'
